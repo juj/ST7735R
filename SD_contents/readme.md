@@ -1,0 +1,1 @@
+Unzip the contents of the .7z file, along with the .bmp files, to the root of the SD card.
