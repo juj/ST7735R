@@ -25,9 +25,14 @@
 #include "Test4_Starfield.h"
 //#include "Test5_Lines.h"
 
-// The following tests require the ST7735R_ENABLE_SDCARD define
+// The following two tests require the ST7735R_ENABLE_SDCARD define
 // to be uncommented at the top of the file.
 
 //#include "Test6_DrawBMP.h"
 //#include "Test7_Draw565.h"
+
+//#include "Test8_HilbertCurve.h"
+
+//#include "Test9_HypnoCircle.h"
+//#include "Test10_FilledCircle.h"
 

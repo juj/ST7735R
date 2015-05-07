@@ -334,7 +334,7 @@ void ST7735R_Begin()
 //   for(int i = 0; i < severalTimes; ++i)
 //      ST7735R_Pixel(x, y, r, g, b); 
 //   ST7735R_EndDraw();
-#define ST7735R_BeginPixels() ST7735R_BeginRect(0, 0, 159, 127)
+#define ST7735R_BeginPixels() ST7735R_BeginRect(0, 0, ST7735R_WIDTH-1, ST7735R_HEIGHT-1)
 
 #define ST7735R_EndDraw() WAIT_SPI
 
@@ -492,7 +492,7 @@ void ST7735R_Line(int x0, int y0, int x1, int y1, uint8_t r, uint8_t g, uint8_t 
     // interleave SPI commands with computation as much as possible, and only
     // send the minimal number of SPI CASET/RASET commands that are needed
     // needed to traverse the cursor across the line.
-    ST7735R_BeginRect(x0, y0, 255, 127);
+    ST7735R_BeginRect(x0, y0, ST7735R_WIDTH-1, ST7735R_HEIGHT-1);
     int diff = dy >> 1;
     while(x0 <= x1)
     {
@@ -534,7 +534,7 @@ void ST7735R_Line(int x0, int y0, int x1, int y1, uint8_t r, uint8_t g, uint8_t 
     }
     int xsign = (dx >= 0) ? 1 : -1;
 
-    ST7735R_BeginRect(x0, y0, x0, 127);
+    ST7735R_BeginRect(x0, y0, x0, ST7735R_HEIGHT-1);
 
     int diff = dx >> 1;
     while(y0 <= y1)
@@ -568,6 +568,143 @@ void ST7735R_Line(int x0, int y0, int x1, int y1, uint8_t r, uint8_t g, uint8_t 
         SEND_COMMAND(ST7735R_RAMWR);
       }
     }
+  }
+  WAIT_SPI;
+}
+
+#define CURSORX(x) \
+  SEND_COMMAND(ST7735R_CASET); \
+  WRITE_SPI_SYNC(0); \
+  WRITE_SPI_SYNC((x)); \
+  SEND_COMMAND(ST7735R_RAMWR);
+
+#define CURSORY(y) \
+  SEND_COMMAND(ST7735R_RASET); \
+  WRITE_SPI_SYNC(0); \
+  WRITE_SPI_SYNC((y)); \
+  SEND_COMMAND(ST7735R_RAMWR);
+
+#define CURSOR(x, y) \
+  SEND_COMMAND(ST7735R_CASET); \
+  WRITE_SPI_SYNC(0); \
+  WRITE_SPI_SYNC((x)); \
+  SEND_COMMAND(ST7735R_RASET); \
+  WRITE_SPI_SYNC(0); \
+  WRITE_SPI_SYNC((y)); \
+  SEND_COMMAND(ST7735R_RAMWR);
+
+#define PUSH_PIXEL(hi, lo) \
+  WRITE_SPI_SYNC(hi); \
+  WRITE_SPI_SYNC(lo);
+
+void ST7735R_Circle(int x, int y, uint8_t radius, uint8_t red, uint8_t green, uint8_t blue)
+{
+  // TODO: x-y clipping.
+  uint8_t lo = LO8_RGB24(red, green, blue);
+  uint8_t hi = HI8_RGB24(red, green, blue);
+
+  int tx = 0;
+  int ty = radius;
+  int error = (5 - (radius << 2)) >> 2;
+
+//  ST7735R_Pixel(x, y - ty, r, g, b);
+  ST7735R_BeginRect(x, y - ty, ST7735R_WIDTH-1, ST7735R_HEIGHT-1);
+  PUSH_PIXEL(hi, lo);
+//  ST7735R_Pixel(x, y + ty, r, g, b);
+  CURSORY(y + ty);
+  PUSH_PIXEL(hi, lo);
+//  ST7735R_Pixel(x - ty, y, r, g, b);
+  CURSOR(x - ty, y);
+  PUSH_PIXEL(hi, lo);
+//  ST7735R_Pixel(x + ty, y, r, g, b);
+  CURSORX(x + ty);
+  PUSH_PIXEL(hi, lo);
+
+  while(tx < ty)
+  {
+    ++tx;
+    if (error < 0)
+      error += (tx << 1) + 1;
+    else
+    {
+      --ty;
+      error += ((tx - ty) << 1) + 1;
+    }
+    
+    WAIT_SPI;
+//  ST7735R_Pixel(x - tx, y - ty, r, g, b);
+    CURSOR(x - tx, y - ty);
+    PUSH_PIXEL(hi, lo);
+//  ST7735R_Pixel(x + tx, y - ty, r, g, b);
+    CURSORX(x + tx);
+    PUSH_PIXEL(hi, lo);
+//  ST7735R_Pixel(x + tx, y + ty, r, g, b);
+    CURSORY(y + ty);
+    PUSH_PIXEL(hi, lo);
+//  ST7735R_Pixel(x - tx, y + ty, r, g, b);
+    CURSORX(x - tx);
+    PUSH_PIXEL(hi, lo);
+
+//  ST7735R_Pixel(x - ty, y - tx, r, g, b);
+    CURSOR(x - ty, y - tx);
+    PUSH_PIXEL(hi, lo);
+//  ST7735R_Pixel(x + ty, y - tx, r, g, b);
+    CURSORX(x + ty);
+    PUSH_PIXEL(hi, lo);
+//  ST7735R_Pixel(x + ty, y + tx, r, g, b);
+    CURSORY(y + tx);
+    PUSH_PIXEL(hi, lo);
+//  ST7735R_Pixel(x - ty, y + tx, r, g, b);
+    CURSORX(x - ty);
+    ST7735R_PushPixel_U16(lo, hi);
+  }
+  WAIT_SPI;
+}
+
+void ST7735R_FilledCircle(int x, int y, uint8_t radius, uint8_t red, uint8_t green, uint8_t blue)
+{
+  // TODO: x-y clipping.
+  uint8_t lo = LO8_RGB24(red, green, blue);
+  uint8_t hi = HI8_RGB24(red, green, blue);
+
+  int tx = 0;
+  int ty = radius;
+  int error = (5 - (radius << 2)) >> 2;
+  
+  ST7735R_BeginRect(x - ty, y, ST7735R_WIDTH-1, ST7735R_HEIGHT-1);
+  
+  int nty = (ty << 1) + 1;
+  for(int i = 0; i < nty; ++i)
+    ST7735R_PushPixel_U16(lo, hi);
+
+  while(tx < ty)
+  {
+    ++tx;
+    if (error < 0)
+      error += (tx << 1) + 1;
+    else
+    {
+      --ty;
+      error += ((tx - ty) << 1) + 1;
+    }
+    WAIT_SPI;
+    CURSOR(x - tx, y - ty);
+    int ntx = (tx << 1) + 1;
+    for(int i = 0; i < ntx; ++i)
+      ST7735R_PushPixel_U16(lo, hi);
+    WAIT_SPI;
+    CURSORY(y + ty);
+    for(int i = 0; i < ntx; ++i)
+      ST7735R_PushPixel_U16(lo, hi);
+    WAIT_SPI;
+    int nty = (ty << 1) + 1;
+    CURSOR(x - ty, y - tx);
+    for(int i = 0; i < nty; ++i)
+      ST7735R_PushPixel_U16(lo, hi);
+    WAIT_SPI;
+    CURSORY(y + tx);
+    for(int i = 0; i < nty; ++i)
+      ST7735R_PushPixel_U16(lo, hi);
   }
   WAIT_SPI;
 }

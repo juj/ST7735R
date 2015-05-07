@@ -38,7 +38,7 @@ void loop_test()
         int screen_x = ((int)sx[i] - 80) * 256 / sz[i] + 80;
         int screen_y = ((int)sy[i] - 64) * 256 / sz[i] + 64;
   
-        if (screen_x >= 0 && screen_y >= 0 && screen_x <= 159 && screen_y <= 127)
+        if (screen_x >= 0 && screen_y >= 0 && screen_x < ST7735R_WIDTH && screen_y < ST7735R_HEIGHT)
         {
           uint8_t r, g, b;
           r = g = b = 255 - sz[i];

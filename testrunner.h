@@ -27,7 +27,6 @@ uint8_t __attribute__((always_inline)) rng()
 void setup_test();
 void loop_test();
 
-#define LOGS
 void setup() {
   Serial.begin(9600);
 
@@ -56,7 +55,7 @@ void setup() {
 #else
   ST7735R_Begin();
   BEGIN_TFT();
-  ST7735R_FillRect(0, 0, 159, 127, 0, 0, 0);
+  ST7735R_FillRect(0, 0, ST7735R_WIDTH-1, ST7735R_HEIGHT-1, 0, 0, 0);
   END_SDCARD();
 #endif
 
@@ -79,6 +78,9 @@ void loop()
   // Erase old text.
   tft.stroke(0,0,0);
   tft.text(timeMicros, 0, 30);
+#else
+  BEGIN_TFT();
+  ST7735R_DrawText(0, 30, (const char *)timeMicros, 0, 0, 0, 0, 0, 0);
 #endif  
   sprintf(timeMicros, "%lu", t1 - t0);
 

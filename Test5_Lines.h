@@ -11,10 +11,10 @@ void loop_test()
   for(int i = 0; i < 100; ++i)
   {
     int x0, x1;
-    do { x0 = rng(); } while(x0 > 159);
-    int y0 = rng() & 127;
-    do { x1 = rng(); } while(x1 > 159);
-    int y1 = rng() & 127;
+    do { x0 = rng(); } while(x0 >= ST7735R_WIDTH);
+    int y0 = rng() & (ST7735R_HEIGHT-1);
+    do { x1 = rng(); } while(x1 >= ST7735R_WIDTH);
+    int y1 = rng() & (ST7735R_HEIGHT-1);
     
     uint8_t r = rng();
     uint8_t g = rng();
