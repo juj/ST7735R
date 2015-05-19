@@ -21,7 +21,7 @@ The library has only been used on an Arduino Uno with 8MHz hardware SPI mode, an
 
 #### References
 
- - The board: http://www.arduino.cc/en/Guide/TFT (bought from http://www.verkkokauppa.com/fi/product/30873/dsgrv/Arduino-1-77-TFT-LCD-Screen-naytto-Arduino-kehitysalustoille)
+ - The display: http://www.arduino.cc/en/Guide/TFT (bought from http://www.verkkokauppa.com/fi/product/30873/dsgrv/Arduino-1-77-TFT-LCD-Screen-naytto-Arduino-kehitysalustoille)
  - Wiring instructions at http://www.arduino.cc/en/Guide/TFTtoBoards
  - Data sheet at http://www.adafruit.com/datasheets/ST7735R_V0.2.pdf
  - Atmel AVR 8 bit instruction set documentation: http://www.atmel.com/images/doc0856.pdf
